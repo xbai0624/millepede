@@ -1,0 +1,10 @@
+
+1. CPP + ROOT, toy model to generate 6-layer tracks, output tracks to a text file : done
+
+2. python code to process text file : done
+
+3. python code to fit a track, with only local parameters : done
+
+4. python millepede code, use PyTorch, GPU computing : done
+
+5. CPP + ROOT, comparison plots, for presentation, results plots :  done

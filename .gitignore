@@ -1,0 +1,11 @@
+test/
+test
+generator/gen
+generator/gen.dSYM/
+generator/gen.dSYM
+generator/hits_2d.root
+generator/true_tracks.txt
+generator/tracks.txt
+core/__pycache__/
+core/__pycache__
+.DS_Store
