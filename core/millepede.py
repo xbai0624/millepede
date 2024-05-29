@@ -33,8 +33,15 @@ print("delta global parameter dim: ", global_params_delta.shape)
 nBatch = 1000
 NITER = 200
 step_size = 0.02
+regularization_lambda = 2e-6
 # fix this layer (reference layer)
 iFixLayerIndex = 0
+
+# parameter for mementum
+USE_MOMENTUM = True
+eta = 0.9
+global_params_delta_prev = torch.zeros(N_on_T, 6)
+
 
 # a function to print pytorch tensors, the original print function for it is too ugly
 def print_tensor(A):
@@ -62,7 +69,7 @@ def transform_point(p, ilayer):
 
 def one_iteration(start, n_batch):
     # update the global params
-    global global_params, global_params_delta
+    global global_params, global_params_delta, global_params_delta_prev, regularization_lambda
     global_params = global_params - global_params_delta
 
     # prepare the big matrix A
@@ -163,7 +170,7 @@ def one_iteration(start, n_batch):
     print(A2.size())
 
     # regularization A2
-    #A2_reg = A2 + 1e-6 * torch.eye(A2.size(0))
+    A2 = A2 + regularization_lambda * torch.eye(A2.size(0))
 
     B = torch.matmul(AT, r)
     print(B.size())
@@ -187,10 +194,8 @@ def one_iteration(start, n_batch):
 
     # solve for the improvement
     #s = torch.linalg.solve(A2, B)
-    #s = torch.linalg.solve(A2_reg, B)
     s = solver.svd(A2, B)
     #s = solver.lin(A2, B)
-    #s = solver.lin(A2_reg, B)
     print("solution: ", s.size())
     #print(s)
 
@@ -205,6 +210,12 @@ def one_iteration(start, n_batch):
     # reshape it
     global step_size
     global_params_delta = (g_s.reshape(N_on_T, 6) * step_size)
+
+    # update with momentum
+    if USE_MOMENTUM:
+        global_params_delta = eta * global_params_delta_prev + (1.- eta)*global_params_delta
+        global_params_delta_prev = global_params_delta
+
     print("improvements = :")
     print_tensor(global_params_delta)
     print("current results = :")
@@ -241,6 +252,15 @@ plt.ion() # enable interactive mode
 fig, ax = plt.subplots()
 line, = ax.plot(x_data, y_data, 'b-')
 
+# save chi2 to a text file
+if USE_MOMENTUM:
+    file_name = "chi2_step_size_{}_momentum_eta_{}_regularization_lambda_{}.txt".format(step_size, eta, regularization_lambda)
+else:
+    file_name = "chi2_step_size_{}_no_momentum_regularization_lambda_{}.txt".format(step_size, eta, regularization_lambda)
+with open(file_name, 'w') as file:
+    file.write("step_size = {}, momentum_eta = {}, regularization_lambda = {}\n".format(step_size, eta, regularization_lambda))
+    formated_str = '  '.join(f"{number:.4f}" for number in y_data)
+    file.write(formated_str)
 
 #line.set_xdata(x_data)
 #line.set_ydata(y_data)
