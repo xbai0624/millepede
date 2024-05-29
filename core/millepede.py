@@ -33,7 +33,7 @@ print("delta global parameter dim: ", global_params_delta.shape)
 nBatch = 1000
 NITER = 200
 step_size = 0.02
-regularization_lambda = 2e-6
+regularization_lambda = 1e-6
 # fix this layer (reference layer)
 iFixLayerIndex = 0
 
