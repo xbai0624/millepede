@@ -3,30 +3,25 @@
 import torch
 import time
 
-from track_fitter import N_on_T, fitter, projector, solver
+from track_fitter import fitter, projector, solver
 from text_parser import vec3_t, track_parser
 from ref import alignment_result
 
-# load tracks
-print("loading tracks, please wait...")
-start_time = time.time();
-parser = track_parser()
-total_tracks = parser.tracks
-end_time = time.time();
-print("tracks loading completed, total time used : {:.4f} seconds.".format(end_time - start_time))
 # a general tool for local track fit
 fitter = fitter()
 projector = projector()
 solver = solver()
 
+# tracker system geometry setup, default 6 points on a track
+N_on_T = 6
+
 # convention of global_params [[d1x, d1y, d1z, a1x, a1y, a1z], 
 #                              [d2x, d2y, d2z, a2x, a2y, a2z],
 #                              ...]
 global_params = torch.zeros(N_on_T, 6)
-#global_params = alignment_result*(-1.0)
 global_params_delta = torch.zeros(N_on_T, 6)
-print("global parameter dimension: ", global_params.shape)
-print("delta global parameter dim: ", global_params_delta.shape)
+#print("global parameter dimension: ", global_params.shape)
+#print("delta global parameter dim: ", global_params_delta.shape)
 
 # we use 1000 tracks for each single fit, and a total of 1,000,000 tracks
 # so we will have 1000 iterations
@@ -37,10 +32,21 @@ regularization_lambda = 1e-6
 # fix this layer (reference layer)
 iFixLayerIndex = 0
 
-# parameter for mementum
+# parameter for momentum
 USE_MOMENTUM = True
 eta = 0.9
 global_params_delta_prev = torch.zeros(N_on_T, 6)
+
+total_tracks = []
+# load tracks
+def load_sim_tracks():
+    global total_tracks
+    print("loading tracks, please wait...")
+    start_time = time.time();
+    parser = track_parser()
+    total_tracks = parser.tracks
+    end_time = time.time();
+    print("tracks loading completed, total time used : {:.4f} seconds.".format(end_time - start_time))
 
 
 # a function to print pytorch tensors, the original print function for it is too ugly
@@ -177,6 +183,7 @@ def one_iteration(start, n_batch):
     #print_tensor(B)
     #input("enter to continue...")
 
+    #'''
     # set fix layer
     # 1) set the corresponding B elements to 0
     b_start = 6 * iFixLayerIndex
@@ -191,6 +198,7 @@ def one_iteration(start, n_batch):
                 A2[b_start + i_fix, b_start + j_fix] = 1
             else:
                 A2[b_start + i_fix, b_start + j_fix] = 0
+    #'''
 
     # solve for the improvement
     #s = torch.linalg.solve(A2, B)
@@ -206,6 +214,14 @@ def one_iteration(start, n_batch):
     # save the improvement for global parameters
     g_s = s[:6*N_on_T]
     print(g_s.size())
+    '''
+    # zero the gradients for the fixed layer
+    # in principle, it should be 0 already, because we set the corresponding A2 part to unit
+    # but considering the computer rounding issue, we zero it here one more time to eleminate
+    # the fluctuation
+    for i_fix_layer in range(0, 6):
+        g_s[b_start + i_fix_layer, 0] = 0
+    '''
 
     # reshape it
     global step_size
@@ -227,7 +243,13 @@ def one_iteration(start, n_batch):
     #print_tensor(global_params)
     
     return chi_square
- 
+
+
+
+'''
+#................................. unit test .................................
+
+load_sim_tracks()
 
 # for show purpose
 y_data = []
@@ -244,8 +266,6 @@ for iiter in range(0, NITER):
     x_data.append(iiter)
 
 
-
-#................................. program ends here..........................................
 # for show purpose
 import matplotlib.pyplot as plt
 plt.ion() # enable interactive mode
@@ -272,7 +292,7 @@ fig.canvas.flush_events()
 # keep the plot after the loop ends
 plt.ioff()
 plt.show()
-
+'''
 
 
 

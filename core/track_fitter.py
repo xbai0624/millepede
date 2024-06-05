@@ -7,9 +7,6 @@
 import torch
 from text_parser import vec3_t
 
-# points on track -- a global variable
-N_on_T = 6
-
 # detailed algorithm for the fitter
 # we fit x-z and y-z plane separaterly
 # the matrix form is, and similar for the other plane:
@@ -60,8 +57,10 @@ class fitter:
         self.solver = solver()
 
     def solve(self, track):
-        if len(track) != N_on_T:
-            print("ERROR: a track must have 6 points.")
+        N_on_T = len(track)
+
+        if N_on_T <= 3:
+            print("ERROR: a track must have >=3 points.")
             print("       unable to fit, return 0's instead.")
             return vec3_t(), vec3_t()
 
@@ -69,7 +68,7 @@ class fitter:
         b = torch.zeros(2*N_on_T, 1)
         for i in range(N_on_T):
             A[i, 0] = track[i].z; A[i, 1] = 1; b[i, 0] = track[i].x;
-            A[i+6, 2] = track[i].z; A[i+6, 3] = 1; b[i+6, 0] = track[i].y;
+            A[i+N_on_T, 2] = track[i].z; A[i+N_on_T, 3] = 1; b[i+N_on_T, 0] = track[i].y;
 
         # get the normal equation
         AT = A.T

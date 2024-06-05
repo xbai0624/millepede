@@ -9,3 +9,5 @@ generator/tracks.txt
 core/__pycache__/
 core/__pycache__
 .DS_Store
+fermilab_test/__pycache__
+fermilab_test/__pycache__/
