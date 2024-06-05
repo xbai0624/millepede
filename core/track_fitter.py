@@ -6,6 +6,8 @@
 
 import torch
 from text_parser import vec3_t
+import scipy.sparse.linalg as spla
+import numpy as np
 
 # detailed algorithm for the fitter
 # we fit x-z and y-z plane separaterly
@@ -26,11 +28,14 @@ else:
 
 # solve the matrix equation Ax = b, two method: 1) linear 2) svd
 # svd is said to be better
+# all methods are described in this page:
+# https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html#module-scipy.sparse.linalg
 class solver:
     def __init__(self):
         pass
 
     def svd(self, A, b):
+        # svd method
         # move to gpu
         A_gpu = A.to(device)
         b_gpu = b.to(device)
@@ -45,12 +50,105 @@ class solver:
         return x
 
     def lin(self, A, b):
+        # linear method
         # move to gpu
         A_gpu = A.to(device)
         b_gpu = b.to(device)
  
         s = torch.linalg.solve(A_gpu, b_gpu)
         return s
+
+    def cg(self, A, b):
+        # conjugate gradient (CG) method
+        # convert pytorch tensors to numpy arrays
+        A_np = A.cpu().numpy()
+        b_np = b.cpu().numpy()
+
+        x_cg_np, info_cg = spla.cg(A_np, b_np)
+        x_cg = torch.from_numpy(x_cg_np).to(A.device)
+        return x_cg
+
+    def cgs(self, A, b):
+        # Conjugate Gradient squared iteration method
+        A_np = A.cpu().numpy()
+        b_np = b.cpu().numpy()
+
+        x_cgs_np, info_cgs = spla.cgs(A_np, b_np)
+        x_cgs = torch.from_numpy(x_cgs_np).to(A.device)
+        return x_cgs
+
+    def gmres(self, A, b):
+        # Generalized Minimal RESidual iteration method
+        A_np = A.cpu().numpy()
+        b_np = b.cpu().numpy()
+
+        x_gmres_np, info_gmres = spla.gmres(A_np, b_np)
+        x_gmres = torch.from_numpy(x_gmres_np).to(A.device)
+        return x_gmres
+
+    def lgmres(self, A, b):
+        # LGMRES method
+        A_np = A.cpu().numpy()
+        b_np = b.cpu().numpy()
+
+        x_lgmres_np, info_lgmres = spla.lgmres(A_np, b_np)
+        x_lgmres = torch.from_numpy(x_lgmres_np).to(A.device)
+        return x_lgmres
+
+    def minres(self, A, b):
+        # Minimal RESidual iteration method
+        A_np = A.cpu().numpy()
+        b_np = b.cpu().numpy()
+
+        x_minres_np, info_minres = spla.minres(A_np, b_np)
+        x_minres = torch.from_numpy(x_minres_np).to(A.device)
+        return x_minres
+
+    def bicg(self, A, b):
+        # BIConjugate Gradient iteration method
+        A_np = A.cpu().numpy()
+        b_np = b.cpu().numpy()
+
+        x_bicg_np, info_bicg = spla.bicg(A_np, b_np)
+        x_bicg = torch.from_numpy(x_bicg_np).to(A.device)
+        return x_bicg
+
+    def bicgstab(self, A, b):
+        # BIConjugate Gradient Stablized iteration method
+        A_np = A.cpu().numpy()
+        b_np = b.cpu().numpy()
+
+        x_bicgstab_np, info_bicgstab = spla.bicgstab(A_np, b_np)
+        x_bicgstab = torch.from_numpy(x_bicgstab_np).to(A.device)
+        return x_bicgstab
+
+    def qmr(self, A, b):
+        # Quasi-Minimal Residual Iteration method
+        A_np = A.cpu().numpy()
+        b_np = b.cpu().numpy()
+
+        x_qmr_np, info_qmr = spla.qmr(A_np, b_np)
+        x_qmr = torch.from_numpy(x_qmr_np).to(A.device)
+        return x_qmr
+
+    def gcrotmk(self, A, b):
+        # flexible GCROT(m, k) algorithm
+        A_np = A.cpu().numpy()
+        b_np = b.cpu().numpy()
+
+        x_gcrotmk_np, info_gcrotmk = spla.gcrotmk(A_np, b_np)
+        x_gcrotmk = torch.from_numpy(x_gcrotmk_np).to(A.device)
+        return x_gcrotmk
+
+    def tfqmr(self, A, b):
+        # Transpose-Free Quasi-Minimal Residual Iteration method
+        A_np = A.cpu().numpy()
+        b_np = b.cpu().numpy()
+
+        x_tfqmr_np, info_tfqmr = spla.tfqmr(A_np, b_np)
+        x_tfqmr = torch.from_numpy(x_tfqmr_np).to(A.device)
+        return x_tfqmr
+
 
 class fitter:
     def __init__(self):

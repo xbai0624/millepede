@@ -7,6 +7,19 @@ from track_fitter import fitter, projector, solver
 from text_parser import vec3_t, track_parser
 from ref import alignment_result
 
+# methods for solving matrix equation Ax = b
+# supported methods: svd, lin, cg, cgs, gmres, lgmres, minres, qmr, bicg, bicgstab, gcrotmk, tfqmr
+# among all these methods:
+#For Symmetric Positive Definite Matrices: Use CG for its efficiency and simplicity.
+#For Symmetric Indefinite Matrices: Use MINRES for stability.
+#For General Non-Symmetric Matrices:
+#   Start with GMRES for its robustness.
+#   Consider BiCGSTAB if GMRES is too memory-intensive or if you face convergence issues.
+#   LGMRES can be tried if GMRES is struggling with convergence.
+#   Use CGS or BiCG if you need alternatives but be aware of their stability issues.
+#   TFQMR and QMR are less commonly used but can be effective for certain problems.
+method = "gmres"
+
 # a general tool for local track fit
 fitter = fitter()
 projector = projector()
@@ -202,7 +215,32 @@ def one_iteration(start, n_batch):
 
     # solve for the improvement
     #s = torch.linalg.solve(A2, B)
-    s = solver.svd(A2, B)
+    if method == "svd":
+        s = solver.svd(A2, B)
+    elif method == "lin":
+        s = solver.lin(A2, B)
+    elif method == "cg":
+        s = solver.cg(A2, B)
+    elif: method == "cgs":
+        s = solver.cgs(A2, B)
+    elif method == "gmres":
+        s = solver.gmres(A2, B)
+    elif method == "lgmres":
+        s = solver.lgmres(A2, B)
+    elif method == "minres":
+        s = solver.minres(A2, B)
+    elif method == "qmr":
+        s = solver.qmr(A2, B)
+    elif method == "bicg":
+        s = solver.bicg(A2, B)
+    elif method == "bicgstab":
+        s = solver.bicgstab(A2, B)
+    elif method == "gcrotmk":
+        s = solver.gcrotmk(A2, B)
+    elif method == "tfqmr":
+        s = solver.tfqmr(A2, B)
+    else:
+        print("unsupported matrix solver: ", method)
     #s = solver.lin(A2, B)
     print("solution: ", s.size())
     #print(s)
