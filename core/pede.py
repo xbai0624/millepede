@@ -42,6 +42,8 @@ nBatch = 1000
 NITER = 200
 step_size = 0.02
 regularization_lambda = 1e-6
+
+APPLY_FIX_LAYERS = True
 # fix this layer (reference layer)
 iFixLayerIndex = 0
 
@@ -101,6 +103,7 @@ def one_iteration(start, n_batch):
 
     # for show purpose, this is a sum of chi2 over 1000 tracks
     chi_square = 0
+    start_time = time.time();
 
     # fill A and r
     # 
@@ -196,22 +199,21 @@ def one_iteration(start, n_batch):
     #print_tensor(B)
     #input("enter to continue...")
 
-    #'''
-    # set fix layer
-    # 1) set the corresponding B elements to 0
-    b_start = 6 * iFixLayerIndex
-    for i_fix_layer in range(0, 6):
-        B[b_start + i_fix_layer, 0] = 0
-    # 2) set the corresponding A2 part to unit matrix
-    #    make the correpsonding block to a unitary matrix, this way we can
-    #    assure that the dx, dy, dz, dax, day, daz for the layer will have 0 solution in each iteration
-    for i_fix in range (0, 6):
-        for j_fix in range(0, 6):
-            if i_fix == j_fix:
-                A2[b_start + i_fix, b_start + j_fix] = 1
-            else:
-                A2[b_start + i_fix, b_start + j_fix] = 0
-    #'''
+    if APPLY_FIX_LAYERS:
+        # set fix layer
+        # 1) set the corresponding B elements to 0
+        b_start = 6 * iFixLayerIndex
+        for i_fix_layer in range(0, 6):
+            B[b_start + i_fix_layer, 0] = 0
+        # 2) set the corresponding A2 part to unit matrix
+        #    make the correpsonding block to a unitary matrix, this way we can
+        #    assure that the dx, dy, dz, dax, day, daz for the layer will have 0 solution in each iteration
+        for i_fix in range (0, 6):
+            for j_fix in range(0, 6):
+                if i_fix == j_fix:
+                    A2[b_start + i_fix, b_start + j_fix] = 1
+                else:
+                    A2[b_start + i_fix, b_start + j_fix] = 0
 
     # solve for the improvement
     #s = torch.linalg.solve(A2, B)
@@ -221,7 +223,7 @@ def one_iteration(start, n_batch):
         s = solver.lin(A2, B)
     elif method == "cg":
         s = solver.cg(A2, B)
-    elif: method == "cgs":
+    elif method == "cgs":
         s = solver.cgs(A2, B)
     elif method == "gmres":
         s = solver.gmres(A2, B)
@@ -279,6 +281,9 @@ def one_iteration(start, n_batch):
 
     #global_params = global_params + global_params_delta
     #print_tensor(global_params)
+
+    end_time = time.time()
+    print("Iteration used {} seconds.\n".format(end_time - start_time))
     
     return chi_square
 

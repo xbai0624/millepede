@@ -9,10 +9,10 @@ x_data = []
 
 for iiter in range(0, pede.NITER):
     print(".................. iteration {} ....................".format(iiter))
-    start_time = time.time()
+    #start_time = time.time()
     chisq = pede.one_iteration(iiter*pede.nBatch, pede.nBatch)
-    end_time = time.time()
-    print("iteration used {} seconds\n".format(end_time - start_time))
+    #end_time = time.time()
+    #print("iteration used {} seconds\n".format(end_time - start_time))
     #input("enter to continue...")
 
     pede.print_tensor(pede.global_params)
