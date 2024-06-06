@@ -1,0 +1,2 @@
+step_size = 0.1, momentum_eta = 0.9, regularization_lambda = 1e-06, method = gmres, epoch = 1
+1713.9851  1687.2332  1626.7540  1542.4311  1439.7586  1339.6045  1224.4987  1098.7682  971.6634  852.0127

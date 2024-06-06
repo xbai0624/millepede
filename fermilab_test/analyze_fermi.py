@@ -16,15 +16,17 @@ starting_params = torch.tensor([
         ])
 #'''
 
+total_epoch = 10
+
 # global parameters
 pede.N_on_T = 4
-#pede.global_params = starting_params
-pede.global_params = torch.zeros(pede.N_on_T, 6)
+pede.global_params = starting_params
+#pede.global_params = torch.zeros(pede.N_on_T, 6)
 pede.global_params_delta = torch.zeros(pede.N_on_T, 6)
 
 pede.nBatch = 2000
 pede.NITER = 10
-pede.step_size = 1
+pede.step_size = 0.1
 pede.regularization_lambda = 1e-6#1e-6
 
 pede.USE_MOMENTUM = True
@@ -57,7 +59,7 @@ def one_epoch(i):
 
 import random
 # do all itrations
-for e in range(0, 10):
+for e in range(0, total_epoch):
     random.shuffle(pede.total_tracks)
     one_epoch(e)
 
@@ -70,17 +72,17 @@ line, = ax.plot(x_data, y_data, 'b-')
 
 # save chi2 to a text file
 if pede.USE_MOMENTUM:
-    file_name = "chi2_step_size_{}_momentum_eta_{}_regularization_lambda_{}.txt".format(pede.step_size, pede.eta, pede.regularization_lambda)
+    file_name = "chi2_step_size_{}_momentum_eta_{}_regularization_lambda_{}_method_{}_epoch_{}.txt".format(pede.step_size, pede.eta, pede.regularization_lambda, pede.method, total_epoch)
 else:
-    file_name = "chi2_step_size_{}_no_momentum_regularization_lambda_{}.txt".format(pede.step_size, pede.eta, pede.regularization_lambda)
+    file_name = "chi2_step_size_{}_no_momentum_regularization_lambda_{}_method_{}_epoch_{}.txt".format(pede.step_size, pede.eta, pede.regularization_lambda, pede.method, total_epoch)
 with open(file_name, 'w') as file:
-    file.write("step_size = {}, momentum_eta = {}, regularization_lambda = {}\n".format(pede.step_size, pede.eta, pede.regularization_lambda))
+    file.write("step_size = {}, momentum_eta = {}, regularization_lambda = {}, method = {}, epoch = {}\n".format(pede.step_size, pede.eta, pede.regularization_lambda, pede.method, total_epoch))
     formated_str = '  '.join(f"{number:.4f}" for number in y_data)
     file.write(formated_str)
 
 #line.set_xdata(x_data)
 #line.set_ydata(y_data)
-ax.set_ylim(0, 40)
+#ax.set_ylim(0, 40)
 ax.relim()
 ax.autoscale_view()
 fig.canvas.draw()
