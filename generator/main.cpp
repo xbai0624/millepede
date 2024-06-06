@@ -44,6 +44,7 @@ int main(int argc, char* argv[])
     const double az[NTrackers] = {-0.8, 0.4, -0.76, 0.1, 1.3, -1.4};
     */
 
+    /*
     // pre-set offset and rotation
     // units in mm
     const double mm = 0.1;
@@ -56,7 +57,20 @@ int main(int argc, char* argv[])
     const double ax[NTrackers] = {0, 0.3, -1, 1.2, -0.5, 0.7};
     const double ay[NTrackers] = {0, 0.5, 1.2, -0.9, 0.7, 1.2};
     const double az[NTrackers] = {0, 0.4, -0.76, 0.1, 1.3, -1.4};
+    */
 
+    // pre-set offset and rotation
+    // units in mm
+    const double mm = 0.1;
+    const double dx[NTrackers] = {0, 1.2, -0.6, -3, 2, -1};
+    const double dy[NTrackers] = {0, -3, 2, 5, -4, 6};
+    const double dz[NTrackers] = {0, 10, 7, -7, -9, 4};
+
+    // units in degree
+    const double deg = 3.1415926/180.;
+    const double ax[NTrackers] = {0, 0, 0, 0, 0, 0};
+    const double ay[NTrackers] = {0, 0, 0, 0, 0, 0};
+    const double az[NTrackers] = {0, 0, 0, 0, 0, 0};
 
     /*
     // pre-set offset and rotation
@@ -122,7 +136,7 @@ int main(int argc, char* argv[])
         plane_transform::vec3_t true_track;
 
         for(int t = 0; t<NTrackers; t++) {
-            trk_pts[t] = gem[t].detect(src, kx, ky, &true_track);
+            trk_pts[t] = gem[t].detect(src, kx, ky, &true_track, gen);
             true_trk_pts[t] = true_track;
 
             h_gem[t] -> Fill(trk_pts[t].x, trk_pts[t].y);

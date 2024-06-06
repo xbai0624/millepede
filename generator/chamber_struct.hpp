@@ -29,7 +29,7 @@ namespace chamber_struct
             pt_rot = r;
         }
 
-        vec3_t detect(const vec3_t& source, const double &kx, const double &ky, vec3_t *true_hit=nullptr)
+        vec3_t detect(const vec3_t& source, const double &kx, const double &ky, vec3_t *true_hit=nullptr, TRandom *gen=nullptr)
         {
             // here we do translate first, then rotate
             // the rotate sequence is (see plane_transform.hpp) : R = RzRyRx
@@ -55,6 +55,12 @@ namespace chamber_struct
             // get the relative position in the new coord
             double new_x = intersect.x - new_origin.x;
             double new_y = intersect.y - new_origin.y;
+
+            if(gen != nullptr) {
+                new_x = gen -> Gaus(new_x, 0.2);
+                new_y = gen -> Gaus(new_y, 0.2);
+            }
+
             // we thought we don't have offset, so the z coord we get from the detector 
             // is still the old one
             double new_z = pt_ori.z;

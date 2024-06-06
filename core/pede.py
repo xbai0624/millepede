@@ -36,20 +36,24 @@ global_params_delta = torch.zeros(N_on_T, 6)
 #print("global parameter dimension: ", global_params.shape)
 #print("delta global parameter dim: ", global_params_delta.shape)
 
+# if you only want to get offset, not rotation, set this one to False
+DO_ANGLE_ALIGN = True
+
 # we use 1000 tracks for each single fit, and a total of 1,000,000 tracks
 # so we will have 1000 iterations
 nBatch = 1000
-NITER = 200
-step_size = 0.02
+NITER = 100
+step_size =0.1 #0.02
 regularization_lambda = 1e-6
 
-APPLY_FIX_LAYERS = True
+DO_FIX_LAYERS = True
 # fix this layer (reference layer)
 iFixLayerIndex = 0
 
 # parameter for momentum
 USE_MOMENTUM = True
 eta = 0.9
+#eta = 0.99
 global_params_delta_prev = torch.zeros(N_on_T, 6)
 
 total_tracks = []
@@ -151,21 +155,54 @@ def one_iteration(start, n_batch):
         #print("track :", j)
         # fill A
         for i in range(0, N_on_T):
-            # dx
-            row = j*N_on_T*2 + 2*i; col_global = 6*i; col_local = 6*N_on_T + j*4
+            # ....................... dx ..............................
+            row = j*N_on_T*2 + 2*i;
+            col_global = 6*i;
+            col_local = 6*N_on_T + j*4
+
             #print("row: ", row, "col: ", col+6)
-            A[row, col_global+0] = 1; A[row, col_global+1] = 0; A[row, col_global+2] = -kx
+            A[row, col_global+0] = 1;
+            A[row, col_global+1] = 0;
+            A[row, col_global+2] = -kx
+            # if fix layer, set the corresponding A matrix elements
+            if DO_FIX_LAYERS:
+                if i == iFixLayerIndex :
+                    A[row, col_global+0] = 0
+                    A[row, col_global+1] = 0
+                    A[row, col_global+2] = 0
+
             A[row, col_global+3] = -kx * original_track[i].y
             A[row, col_global+4] = original_track[i].z + kx*original_track[i].x
             A[row, col_global+5] = -original_track[i].y
+            # if not use angle alignment parameters, set A matrix elements to 0
+            if not DO_ANGLE_ALIGN:
+                A[row, col_global+3] = 0
+                A[row, col_global+4] = 0
+                A[row, col_global+5] = 0
+
             A[row, col_local+0] = -transformed_track[i].z
             A[row, col_local+1] = -1
-            # dy
+            # ....................... dy ..............................
             row = row + 1
-            A[row, col_global+0] = 0; A[row, col_global+1] = 1; A[row, col_global+2] = -ky
+            A[row, col_global+0] = 0;
+            A[row, col_global+1] = 1;
+            A[row, col_global+2] = -ky
+            # if fix layer, set the corresponding A matrix elements
+            if DO_FIX_LAYERS:
+                if i == iFixLayerIndex :
+                    A[row, col_global+0] = 0
+                    A[row, col_global+1] = 0
+                    A[row, col_global+2] = 0
+
             A[row, col_global+3] = -(original_track[i].z + ky * original_track[i].y)
             A[row, col_global+4] = ky*original_track[i].x
             A[row, col_global+5] = original_track[i].x
+            # if not use angle alignment parameters, set A matrix elements to 0
+            if not DO_ANGLE_ALIGN:
+                A[row, col_global+3] = 0
+                A[row, col_global+4] = 0
+                A[row, col_global+5] = 0
+
             A[row, col_local+2] = -transformed_track[i].z
             A[row, col_local+3] = -1
 
@@ -184,6 +221,7 @@ def one_iteration(start, n_batch):
     print(r.size())
     #r.zero_()
     #print_tensor(r)
+    #print_tensor(A)
     #input("enter to continue...")
 
     AT = A.T
@@ -199,7 +237,8 @@ def one_iteration(start, n_batch):
     #print_tensor(B)
     #input("enter to continue...")
 
-    if APPLY_FIX_LAYERS:
+
+    if DO_FIX_LAYERS:
         # set fix layer
         # 1) set the corresponding B elements to 0
         b_start = 6 * iFixLayerIndex
@@ -211,9 +250,42 @@ def one_iteration(start, n_batch):
         for i_fix in range (0, 6):
             for j_fix in range(0, 6):
                 if i_fix == j_fix:
-                    A2[b_start + i_fix, b_start + j_fix] = 1
+                    A2[b_start + i_fix, b_start + j_fix] = 1e10
                 else:
                     A2[b_start + i_fix, b_start + j_fix] = 0
+
+    if not DO_ANGLE_ALIGN:
+        # fix all angle parameters
+        for ilayer in range(0, N_on_T):
+            angle_start = ilayer * 6
+            # set the corresponding B elements to 0
+            for b_idx in range(0, 6):
+                if(b_idx >= 3):
+                    # only set the corresponding angle parameter parts
+                    B[angle_start + b_idx, 0] = 0
+            # set the the A2 part to unit matrix
+            # this should be different than setting fixed layer, b/c we also need
+            # to set the correlation part between angle and offset parameters to 0
+            # for fixed layers, you don't need to do that
+            for i_idx in range(0, 6):
+                for j_idx in range(0, 6):
+                    # correlation part - top right section
+                    if (i_idx < 3 and j_idx >= 3):
+                        A2[angle_start + i_idx, angle_start + j_idx] = 0
+                    # correlation part = bottom left section
+                    elif (i_idx >=3 and j_idx < 3):
+                        A2[angle_start + i_idx, angle_start + j_idx] = 0
+                    # the pure angle parameter part, need to be unitary
+                    elif (i_idx >= 3 and j_idx >= 3):
+                        if (i_idx == j_idx):
+                            A2[angle_start + i_idx, angle_start + j_idx] = 1e10
+                        else:
+                            A2[angle_start + i_idx, angle_start + j_idx] = 0
+
+    # all done for A2 and B
+    #print_tensor(A2)
+    #print_tensor(B)
+    #input("enter to continue...")
 
     # solve for the improvement
     #s = torch.linalg.solve(A2, B)
@@ -266,6 +338,9 @@ def one_iteration(start, n_batch):
     # reshape it
     global step_size
     global_params_delta = (g_s.reshape(N_on_T, 6) * step_size)
+
+    # zero out the gradients, they should be 0 already, but do one more 0 to remove the
+    # numerical stability issue
 
     # update with momentum
     if USE_MOMENTUM:

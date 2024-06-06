@@ -21,6 +21,14 @@ import numpy as np
 # and we use normal equation to solve (kx, bx, ky, by)
 
 
+# a function to print pytorch tensors, the original print function for it is too ugly
+def print_tensor(A):
+    for row in A:
+        formated_row = ["{:{}.{}f}".format(elem, 12, 6) for elem in row]
+        print("[", "   ".join(formated_row), "]")
+    print("\n")
+
+
 if torch.backends.mps.is_available():
     device = torch.device('cpu')
 else:
@@ -154,7 +162,8 @@ class fitter:
     def __init__(self):
         self.solver = solver()
 
-    def solve(self, track):
+    def solve(self, track, resolution=[]):
+        # resolution must be in this format [\sigma_x1, \sigma_y1, \sigma_x2, \sigma_y2, ..., \sigma_xn, \sigma_yn]
         N_on_T = len(track)
 
         if N_on_T <= 3:
@@ -183,6 +192,13 @@ class fitter:
         # calculate the chi2, with default error to be 1
         t1 = torch.matmul(A, s)
         t_diff = t1 - b;
+
+        # if resolution for each plane has been provided
+        if len(resolution) == len(track)*2:
+            reso_tensor = torch.tensor(resolution)
+            reso_tensor = reso_tensor.reshape(-1, 1)
+            t_diff = t_diff / reso_tensor
+
         chi2 = torch.sum(torch.square(t_diff))
 
         return direction, cross_point, chi2.item()

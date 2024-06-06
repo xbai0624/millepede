@@ -1,11 +1,10 @@
-
 import sys, os
 module_path = os.path.abspath("../core")
 if module_path not in sys.path:
     sys.path.insert(0, module_path)
 
 import pede
-import load_fermi_data
+import load_clean_fermi_data
 import torch
 
 #'''
@@ -19,17 +18,17 @@ starting_params = torch.tensor([
 
 # global parameters
 pede.N_on_T = 4
-pede.global_params = starting_params
-#pede.global_params = torch.zeros(pede.N_on_T, 6)
+#pede.global_params = starting_params
+pede.global_params = torch.zeros(pede.N_on_T, 6)
 pede.global_params_delta = torch.zeros(pede.N_on_T, 6)
 
-pede.nBatch = 1000
-pede.NITER = 20
-pede.step_size = 1.0
-pede.regularization_lambda = 1e-6
+pede.nBatch = 2000
+pede.NITER = 10
+pede.step_size = 1
+pede.regularization_lambda = 1e-6#1e-6
 
 pede.USE_MOMENTUM = True
-pede.eta = 0.98
+pede.eta = 0.9
 pede.global_params_delta_prev = torch.zeros(pede.N_on_T, 6)
 
 print("global parameter dimension: ", pede.global_params.shape)
@@ -37,23 +36,30 @@ print("delta global parameter dim: ", pede.global_params_delta.shape)
 
 # load tracks
 print("total tracks: ", len(pede.total_tracks))
-pede.total_tracks = load_fermi_data.load_fermi_data()
+# only load cleanup tracks
+pede.total_tracks = load_clean_fermi_data.load_fermi_data()
 print("total tracks: ", len(pede.total_tracks))
-
 
 # do the alignment
 x_data = []
 y_data = []
-for iiter in range(0, pede.NITER):
-    print("......................... iteration {} ..........................".format(iiter))
-    chisq = pede.one_iteration(iiter*pede.nBatch, pede.nBatch)
 
-    pede.print_tensor(pede.global_params)
-    print("chi square = ", chisq)
-    y_data.append(chisq)
-    x_data.append(iiter)
+def one_epoch(i):
+    for iiter in range(0, pede.NITER):
+        n_it = e*pede.NITER + iiter
+        print("......................... iteration {} ..........................".format(n_it))
+        chisq = pede.one_iteration(iiter*pede.nBatch, pede.nBatch)
 
+        pede.print_tensor(pede.global_params)
+        print("chi square = ", chisq)
+        y_data.append(chisq)
+        x_data.append(n_it)
 
+import random
+# do all itrations
+for e in range(0, 10):
+    random.shuffle(pede.total_tracks)
+    one_epoch(e)
 
 #................................. program ends here..........................................
 # for show purpose
@@ -74,6 +80,7 @@ with open(file_name, 'w') as file:
 
 #line.set_xdata(x_data)
 #line.set_ydata(y_data)
+ax.set_ylim(0, 40)
 ax.relim()
 ax.autoscale_view()
 fig.canvas.draw()
