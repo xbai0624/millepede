@@ -26,11 +26,11 @@ pede.global_params_delta = torch.zeros(pede.N_on_T, 6)
 
 pede.nBatch = 2000
 pede.NITER = 10
-pede.step_size = 0.1
+pede.step_size = 1.0
 pede.regularization_lambda = 1e-6#1e-6
 
 pede.USE_MOMENTUM = True
-pede.eta = 0.9
+pede.eta = 0.1 #0.9
 pede.global_params_delta_prev = torch.zeros(pede.N_on_T, 6)
 
 print("global parameter dimension: ", pede.global_params.shape)
@@ -51,8 +51,6 @@ def one_epoch(i):
         n_it = e*pede.NITER + iiter
         print("......................... iteration {} ..........................".format(n_it))
         chisq = pede.one_iteration(iiter*pede.nBatch, pede.nBatch)
-
-        pede.print_tensor(pede.global_params)
         print("chi square = ", chisq)
         y_data.append(chisq)
         x_data.append(n_it)
@@ -60,7 +58,7 @@ def one_epoch(i):
 import random
 # do all itrations
 for e in range(0, total_epoch):
-    random.shuffle(pede.total_tracks)
+    #random.shuffle(pede.total_tracks)
     one_epoch(e)
 
 #................................. program ends here..........................................

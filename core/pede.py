@@ -94,8 +94,21 @@ def transform_point(p, ilayer):
 
 def one_iteration(start, n_batch):
     # update the global params
-    global global_params, global_params_delta, global_params_delta_prev, regularization_lambda
+    global global_params, global_params_delta, global_params_delta_prev, regularization_lambda, step_size
     global_params = global_params - global_params_delta
+
+    # print out configuration for each iteration to make sure settings are correct
+    print("  minimization method = ", method)
+    print("       DO_ANGLE_ALIGN = ", DO_ANGLE_ALIGN)
+    print("        DO_FIX_LAYERS = ", DO_FIX_LAYERS)
+    print("    fixed layer index = ", iFixLayerIndex)
+    print("         USE_MOMENTUM = ", USE_MOMENTUM)
+    print("         momentum eta = ", eta)
+    print("           Batch size = ", nBatch)
+    print("     total iterations = ", NITER)
+    print("            step size = ", step_size)
+    print("regularization lambda = ", regularization_lambda)
+
 
     # prepare the big matrix A
     A = torch.zeros(nBatch*N_on_T*2, nBatch*4+6*N_on_T)
@@ -336,7 +349,6 @@ def one_iteration(start, n_batch):
     '''
 
     # reshape it
-    global step_size
     global_params_delta = (g_s.reshape(N_on_T, 6) * step_size)
 
     # zero out the gradients, they should be 0 already, but do one more 0 to remove the
@@ -350,7 +362,7 @@ def one_iteration(start, n_batch):
     print("improvements = :")
     print_tensor(global_params_delta)
     print("current results = :")
-    #print_tensor(global_params)
+    print_tensor(global_params)
     print("actual results = :")
     #print_tensor(alignment_result)
 

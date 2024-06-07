@@ -166,7 +166,7 @@ class fitter:
         # resolution must be in this format [\sigma_x1, \sigma_y1, \sigma_x2, \sigma_y2, ..., \sigma_xn, \sigma_yn]
         N_on_T = len(track)
 
-        if N_on_T <= 3:
+        if N_on_T < 3:
             print("ERROR: a track must have >=3 points.")
             print("       unable to fit, return 0's instead.")
             return vec3_t(), vec3_t()
