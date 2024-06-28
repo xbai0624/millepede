@@ -1,0 +1,2 @@
+step_size = 0.2, momentum_eta = 0.1, regularization_lambda = 1e-06, method = gmres, epoch = 2
+10.0820  10.6254  9.9627  9.9661  9.7991  10.3396  11.2047  10.5838  10.1513  10.0358

@@ -7,6 +7,10 @@ pede.load_sim_tracks()
 y_data = []
 x_data = []
 
+descriptor = "check_fix_layer_correct"
+pede.NITER = 50
+pede.method = "minres"
+
 for iiter in range(0, pede.NITER):
     print(".................. iteration {} ....................".format(iiter))
     #start_time = time.time()
@@ -31,9 +35,9 @@ line, = ax.plot(x_data, y_data, 'b-')
 
 # save chi2 to a text file
 if pede.USE_MOMENTUM:
-    file_name = "chi2_step_size_{}_momentum_eta_{}_regularization_lambda_{}_{}.txt".format(pede.step_size, pede.eta, pede.regularization_lambda, pede.method)
+    file_name = "chi2_step_size_{}_momentum_eta_{}_regularization_lambda_{}_{}_{}.txt".format(pede.step_size, pede.eta, pede.regularization_lambda, pede.method, descriptor)
 else:
-    file_name = "chi2_step_size_{}_no_momentum_regularization_lambda_{}_{}.txt".format(pede.step_size, pede.eta, pede.regularization_lambda, pede.method)
+    file_name = "chi2_step_size_{}_no_momentum_regularization_lambda_{}_{}_{}.txt".format(pede.step_size, pede.eta, pede.regularization_lambda, pede.method, descriptor)
 with open(file_name, 'w') as file:
     file.write("step_size = {}, momentum_eta = {}, regularization_lambda = {}, method = {}\n".format(pede.step_size, pede.eta, pede.regularization_lambda, pede.method))
     formated_str = '  '.join(f"{number:.4f}" for number in y_data)

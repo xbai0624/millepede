@@ -177,21 +177,26 @@ def one_iteration(start, n_batch):
             A[row, col_global+0] = 1;
             A[row, col_global+1] = 0;
             A[row, col_global+2] = -kx
+
+            A[row, col_global+3] = -kx * original_track[i].y
+            A[row, col_global+4] = original_track[i].z + kx*original_track[i].x
+            A[row, col_global+5] = -original_track[i].y
+
+            # if not use angle alignment parameters, set A matrix elements to 0
+            if not DO_ANGLE_ALIGN:
+                A[row, col_global+3] = 0
+                A[row, col_global+4] = 0
+                A[row, col_global+5] = 0
+
             # if fix layer, set the corresponding A matrix elements
             if DO_FIX_LAYERS:
                 if i == iFixLayerIndex :
                     A[row, col_global+0] = 0
                     A[row, col_global+1] = 0
                     A[row, col_global+2] = 0
-
-            A[row, col_global+3] = -kx * original_track[i].y
-            A[row, col_global+4] = original_track[i].z + kx*original_track[i].x
-            A[row, col_global+5] = -original_track[i].y
-            # if not use angle alignment parameters, set A matrix elements to 0
-            if not DO_ANGLE_ALIGN:
-                A[row, col_global+3] = 0
-                A[row, col_global+4] = 0
-                A[row, col_global+5] = 0
+                    A[row, col_global+3] = 0
+                    A[row, col_global+4] = 0
+                    A[row, col_global+5] = 0
 
             A[row, col_local+0] = -transformed_track[i].z
             A[row, col_local+1] = -1
@@ -200,21 +205,26 @@ def one_iteration(start, n_batch):
             A[row, col_global+0] = 0;
             A[row, col_global+1] = 1;
             A[row, col_global+2] = -ky
+
+            A[row, col_global+3] = -(original_track[i].z + ky * original_track[i].y)
+            A[row, col_global+4] = ky*original_track[i].x
+            A[row, col_global+5] = original_track[i].x
+
+            # if not use angle alignment parameters, set A matrix elements to 0
+            if not DO_ANGLE_ALIGN:
+                A[row, col_global+3] = 0
+                A[row, col_global+4] = 0
+                A[row, col_global+5] = 0
+
             # if fix layer, set the corresponding A matrix elements
             if DO_FIX_LAYERS:
                 if i == iFixLayerIndex :
                     A[row, col_global+0] = 0
                     A[row, col_global+1] = 0
                     A[row, col_global+2] = 0
-
-            A[row, col_global+3] = -(original_track[i].z + ky * original_track[i].y)
-            A[row, col_global+4] = ky*original_track[i].x
-            A[row, col_global+5] = original_track[i].x
-            # if not use angle alignment parameters, set A matrix elements to 0
-            if not DO_ANGLE_ALIGN:
-                A[row, col_global+3] = 0
-                A[row, col_global+4] = 0
-                A[row, col_global+5] = 0
+                    A[row, col_global+3] = 0
+                    A[row, col_global+4] = 0
+                    A[row, col_global+5] = 0
 
             A[row, col_local+2] = -transformed_track[i].z
             A[row, col_local+3] = -1

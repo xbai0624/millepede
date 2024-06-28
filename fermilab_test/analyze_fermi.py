@@ -16,17 +16,17 @@ starting_params = torch.tensor([
         ])
 #'''
 
-total_epoch = 10
+total_epoch = 2
 
 # global parameters
 pede.N_on_T = 4
-pede.global_params = starting_params
-#pede.global_params = torch.zeros(pede.N_on_T, 6)
+#pede.global_params = starting_params
+pede.global_params = torch.zeros(pede.N_on_T, 6)
 pede.global_params_delta = torch.zeros(pede.N_on_T, 6)
 
-pede.nBatch = 2000
-pede.NITER = 10
-pede.step_size = 1.0
+pede.nBatch = 1000
+pede.NITER = 5
+pede.step_size = 0.2
 pede.regularization_lambda = 1e-6#1e-6
 
 pede.USE_MOMENTUM = True
